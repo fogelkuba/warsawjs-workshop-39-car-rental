@@ -33,7 +33,16 @@ module.exports.seed = async function(knex) {
       list_price_currency: 'USD',
       rented: true,
       rental_id: 1
-    }
+    },
+    {
+      car_id: 4,
+      make: 'Toyota',
+      model: 'Hilux',
+      plate: 'TY555XX',
+      list_price_amount: 75,
+      list_price_currency: 'USD',
+      rented: false,
+    },
   ]);
   await knex('rentals').insert([
     {

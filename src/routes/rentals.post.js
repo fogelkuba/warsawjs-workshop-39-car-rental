@@ -1,9 +1,12 @@
 'use strict';
 
 // const db = require('../db');
-const listPrice = require('../strategies/listPrice');
-const Money = require('../types/Money');
+// const listPrice = require('../strategies/listPrice');
+// const Money = require('../types/Money');
+
 const DateRange = require('../types/DateRange');
+const Cars = require('../modules/Cars');
+const CarMapper = require('../mappers/CarMapper');
 
 module.exports = function(app, { db }) {
   app.post('/rentals', {
@@ -29,19 +32,15 @@ module.exports = function(app, { db }) {
     const start = new Date(request.body.date_start);
     const end = new Date(request.body.date_end);
     const { car, price, days } = await db.transaction(async function(transaction) {
-      const car = await transaction('cars')
-        .first()
-        .where({ car_id: car_id }).forUpdate();
-      if (!car) {
-        throw new Error('No entry found for car: ' + car_id);
-      }
+      const mapper = new CarMapper({ db: transaction });
+      const cars = new Cars({ mapper });
+      const {price, days, car} = await cars.getOffer(
+          car_id,
+          new DateRange({start, end})
+      );
       if (car.rented) {
         throw new Error('This car is already rented');
       }
-      const { price, days } = listPrice(
-          new Money({amount:car.list_price_amount, currency:car.list_price_currency}),
-          new DateRange({start, end})
-      );
       // Actually save the rental contract and mark the car as taken:
       const [ rental_id ] = await transaction('rentals')
         .insert({

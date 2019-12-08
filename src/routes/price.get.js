@@ -2,9 +2,11 @@
 
 // const db = require('../db');
 const DAY_MS = 60 * 60 * 24 * 1000;
-const listPrice = require('../strategies/listPrice');
-const Money = require('../types/Money');
+// const listPrice = require('../strategies/listPrice');
+// const Money = require('../types/Money');
 const DateRange = require('../types/DateRange');
+const Cars = require('../modules/Cars');
+const CarMapper = require('../mappers/CarMapper');
 
 module.exports = function(app, { db }) {
   app.get('/price', {
@@ -23,16 +25,13 @@ module.exports = function(app, { db }) {
     const car_id = request.query.car_id;
     const start = new Date(request.query.date_start);
     const end = new Date(request.query.date_end);
-    const car = await db('cars')
-      .first()
-      .where({ car_id: car_id });
-    if (!car) {
-      return Promise.reject(new Error('No entry found for car: ' + car_id));
-    }
-    const { price, days } = listPrice(
-        new Money({amount:car.list_price_amount, currency: car.list_price_currency}),
+    const mapper = new CarMapper({ db })
+    const cars = new Cars({ mapper });
+    const {price, days, car} = await cars.getOffer(
+        car_id,
         new DateRange({start, end})
-  );
+    );
+
     reply.view('price', {
       car,
       price,
