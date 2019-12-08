@@ -1,24 +1,36 @@
 'use strict';
 
-const listPrice = require('../strategies/listPrice');
 const Money = require('../types/Money');
+const listPrice = require('../strategies/listPrice');
+const CarMapper = require('../mappers/CarMapper');
 
 class Cars {
-    constructor({ mapper }) {
-        this._mapper = mapper;
+    constructor({ db }) {
+        this._db = db;
     }
 
-    async getOffer (carID, dateRange) {
-        // const db = this._db;
-        const mapper = this._mapper;
-        const car = await mapper.find({ID: carID})
-        const { price, days } = listPrice(
-            // new Money({amount:car.list_price_amount, currency: car.list_price_currency}),
-            car.getListPrice(),
-            dateRange
-        );
+    async getOffer(carID, dateRange) {
+        const mapper = new CarMapper({ db: this._db });
+        const car = await mapper.find({ ID: carID });
+        const basePrice = car.getListPrice()
+        const { price, days } = listPrice(basePrice, dateRange);
+        return { car, price, days };
+    }
 
-        return { price, days, car }
+    async rent(carID, rentalID, customerData) {
+        const mapper = new CarMapper({ db: this._db });
+        const car = await mapper.find({ ID: carID });
+        car.rent(rentalID, customerData);
+        await mapper.update(car);
+        return car;
+    }
+
+    async endRental(carID) {
+        const mapper = new CarMapper({ db: this._db });
+        const car = await mapper.find({ ID: carID });
+        car.endRental();
+        await mapper.update(car);
+        return car;
     }
 }
 
