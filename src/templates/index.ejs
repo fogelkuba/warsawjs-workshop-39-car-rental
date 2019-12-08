@@ -9,6 +9,14 @@
       <p>This is going to be a dashboard some day...</p>
       <p>(Bonus feature: implement a dashboard!)</p>
       <p><a href="/cars">Go to cars</a></p>
+
+        <ul>
+            <% cars.forEach((car)=>{%>
+            <li><%=car%></li>
+            <%});%>
+        </ul>
+
+
     </main>
   </body>
 </html>
